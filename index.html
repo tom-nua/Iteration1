@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="shortcut icon" href="#" />
-    <title>Unit B Project 3</title>
+    <title>Unit B Iteration 1</title>
     <script src="js/phaser.min.js"></script>
     <style type="text/css">
         body {
@@ -14,10 +14,7 @@
 </head>
 
 <body>
-    <script src="js/UIClasses.js" type="text/javascript"></script>
-    <script src="js/TankClasses.js" type="text/javascript"></script>
-    <script src="js/TankScene.js" type="text/javascript"></script>
-    <script src="js/Utils.js" type="text/javascript"></script>
+    <script src="js/Scenes.js" type="text/javascript"></script>
     <script>
         var config = {
             type: Phaser.AUTO,
@@ -33,7 +30,7 @@
                 }
             },
             pixelArt: false,
-            scene: [MenuScene, Level1, Level2, Level3, UIScene]
+            scene: [Level1]
         };
         var game = new Phaser.Game(config);
     </script>
