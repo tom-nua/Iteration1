@@ -12,20 +12,52 @@ class BaseScene extends Phaser.Scene {
         this.tilemap.createStaticLayer('background', tilesheet);
         this.tilemap.createStaticLayer('placeTiles', tilesheet);
 
-        this.enemies = this.physics.add.group();
-        let origin = new Phaser.Math.Vector2(
-            -18.00, 258.00
-        );
-        let target = new Phaser.Math.Vector2(
-            251.00, 255.00
-        )
-        let path = new Phaser.Curves.Line(origin, target);
-        let newEnemy = this.add.follower(path, -18.00, 258.00, 'tilesheet', 245);
-        this.enemies.add(newEnemy);
-        newEnemy.startFollow();
+        this.pointsX = [251.00];
+        this.pointsY = [255.00];
+
+        this.enemies = this.physics.add.group();   
+                
+        this.spawnEnemy()
+        
     }
     update(){
 
+    }
+
+    spawnEnemy(){
+        //local enemy create
+        let newEnemy = this.add.follower(null, -18.00, 258.00, 'tilesheet', 245);
+        newEnemy.currentPoint = 0;
+        this.enemies.add(newEnemy);
+
+        // new path
+        let path = new Phaser.Curves.Line(
+            new Phaser.Math.Vector2(
+                -18.00, 258.00
+            ), 
+            new Phaser.Math.Vector2(
+                this.pointsX[newEnemy.currentPoint], this.pointsY[newEnemy.currentPoint]
+            )
+        );
+
+        newEnemy.path = path;
+        newEnemy.startFollow({duration: 1000, onComplete: function(){
+            console.log(this);
+            this.parent.scene.pathEnd(newEnemy);
+        }});
+    }
+
+    pathEnd(enemy){
+        enemy.currentPoint =+ 1;
+        let newPath = new Phaser.Curves.Line(
+            origin, 
+            new Phaser.Math.Vector2(
+                this.pointsX[enemy.currentPoint], this.pointsY[enemy.currentPoint]
+            )
+        );
+
+        enemy.path = newPath;
+        enemy.startFollow({duration: 5000, onComplete: this.pathEnd});
     }
 }
 
