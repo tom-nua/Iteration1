@@ -5,7 +5,7 @@ class BaseScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet('tilesheet', 'assets/tilesheet_Padded.png', {
+        this.load.spritesheet('tilesheet', 'assets/tilesheet.png', {
             frameWidth: 64, frameHeight: 64, margin: 1, spacing: 2
         });
     }
