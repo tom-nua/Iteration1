@@ -5,7 +5,9 @@ class BaseScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet('tilesheet', 'assets/tilesheet_Padded.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('tilesheet', 'assets/tilesheet_Padded.png', {
+            frameWidth: 64, frameHeight: 64, margin: 1, spacing: 2
+        });
     }
     create() {
         //variables
@@ -13,7 +15,7 @@ class BaseScene extends Phaser.Scene {
         //tiles
         let tilesheet = this.tilemap.addTilesetImage('tilesheet');
         this.tilemap.createStaticLayer('background', tilesheet);
-        this.tilemap.createStaticLayer('placeTiles', tilesheet);
+        this.placeTileLayer = this.tilemap.createDynamicLayer('placeTiles', tilesheet);
 
         // enemy spawn location
         this.spawnX = -18.00;
@@ -29,6 +31,8 @@ class BaseScene extends Phaser.Scene {
 
         this.enemies = this.physics.add.group();
 
+        this.defences = this.physics.add.group();
+
         //debug spawn enemy
         this.spawnEnemy();
 
@@ -37,8 +41,13 @@ class BaseScene extends Phaser.Scene {
             let scene = this.scene;
             let pointerX = pointer.worldX;
             let pointerY = pointer.worldY
-            let tile = scene.tilemap.getTileAtWorldXY(pointerX, pointerY, false, camera, 'placeTiles');
-            console.log(tile);
+            let existingTile = scene.placeTileLayer.hasTileAtWorldXY(pointerX, pointerY);
+            if(existingTile){
+                let newTile = scene.placeTileLayer.putTileAtWorldXY(181, pointerX, pointerY);
+                let tileWorldPos = scene.placeTileLayer.tileToWorldXY(newTile.x, newTile.y);
+                let newDefence = scene.defences.create(tileWorldPos.x + 32, tileWorldPos.y + 25, 'tilesheet', 249);
+            }
+            
         });
     }
 
