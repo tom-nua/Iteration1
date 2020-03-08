@@ -33,6 +33,11 @@ class BaseScene extends Phaser.Scene {
 
         this.defences = this.physics.add.group();
 
+        this.bullets = this.physics.add.group({
+            defaultKey: 'tilesheet',
+            defaultFrame: 296
+        });
+
         //debug spawn enemy
         this.spawnEnemy();
 
@@ -66,6 +71,9 @@ class BaseScene extends Phaser.Scene {
             let nearestEnemy = this.findNearestEnemy(defence);
             if (nearestEnemy) {
                 console.log("fire!");
+                let bullet = this.bullets.get(defence.x, defence.y);
+                let rotation = defence.rotation - Phaser.Math.DegToRad(90);
+                this.physics.velocityFromRotation(rotation, 300, bullet.body.velocity);
             }
         };
     }
