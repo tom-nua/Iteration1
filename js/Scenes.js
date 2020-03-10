@@ -37,12 +37,15 @@ class BaseScene extends Phaser.Scene {
             defaultKey: 'tilesheet',
             defaultFrame: 296
         });
+        this.physics.add.overlap(this.bullets, this.enemies, this.bulletHit, null, this);
 
         //debug spawn enemy
         this.spawnEnemy();
 
         this.scene.run('UIScene',{gameScene: this});
         this.UIScene = this.scene.get("UIScene");
+
+        this.score = 0;
 
         this.selectedTile;
 
@@ -66,16 +69,35 @@ class BaseScene extends Phaser.Scene {
         });
     }
 
-    update() {
+    update(time) {
         for (const defence of this.defences.getChildren()) {
+            if(defence.lastFire && (time - defence.lastFire) < 1000){
+                return;
+            }
+            defence.lastFire = time;
             let nearestEnemy = this.findNearestEnemy(defence);
             if (nearestEnemy) {
+                let targetAngle = Phaser.Math.Angle.Between(defence.x, defence.y, nearestEnemy.x, nearestEnemy.y);
+                defence.setRotation(targetAngle);
+
                 console.log("fire!");
                 let bullet = this.bullets.get(defence.x, defence.y);
-                let rotation = defence.rotation - Phaser.Math.DegToRad(90);
-                this.physics.velocityFromRotation(rotation, 300, bullet.body.velocity);
+                bullet.setRotation(targetAngle);
+                this.physics.velocityFromRotation(targetAngle, 400, bullet.body.velocity);
+                
             }
         };
+    }
+
+    bulletHit(bullet, enemy){
+        enemy.health -= 1;
+        console.log(enemy.health);
+        bullet.destroy();
+        if (enemy.health <= 0){
+            enemy.destroy();
+            this.score += 4;
+            this.UIScene.updateScore(this.score);
+        }
     }
 
     findNearestEnemy(defence) {
@@ -85,7 +107,7 @@ class BaseScene extends Phaser.Scene {
                     defence.x, defence.y,
                     enemy.x, enemy.y
                 )
-            if (distanceBetween <= 200) {
+            if (distanceBetween <= 300) {
                 return enemy;
             }
         };
@@ -99,11 +121,12 @@ class BaseScene extends Phaser.Scene {
         path.splineTo(this.points);
 
         let newEnemy = this.add.follower(path, this.spawnX, this.spawnY, 'tilesheet', 245);
+        newEnemy.health = 5;
         this.enemies.add(newEnemy);
 
         newEnemy.startFollow({
             positionOnPath: true,
-            duration: 10000,
+            duration: 20000,
             yoyo: false,
             repeat: 0,
             rotateToPath: true,
@@ -132,8 +155,8 @@ class Level1 extends BaseScene {
         this.tilemap = this.make.tilemap({ key: 'level1Map' });
         super.create();
     }
-    update() {
-        super.update();
+    update(time, delta) {
+        super.update(time, delta);
     }
 }
 
@@ -157,6 +180,7 @@ class UIScene extends Phaser.Scene {
         this.defenceButton = this.add.sprite(560, 576, 'button');
         this.defenceButton.setInteractive();
         this.defenceButton.on('pointerdown', this.defencePressed);
+        this.scoreText = this.add.text(this.game.scale.width - 100, 10, 'Score: 0');
     }
     defencePressed(){
         if(!this.scene.gameScene.selectedTile){
@@ -180,6 +204,9 @@ class UIScene extends Phaser.Scene {
     }
     unToggleButtons(){
         this.toggleButton(this.toggledButton);
+    }
+    updateScore(newScore){
+        this.scoreText.setText('Score: '+newScore);
     }
     update() {
 
