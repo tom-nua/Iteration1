@@ -46,7 +46,7 @@ class BaseScene extends Phaser.Scene {
         this.UIScene = this.scene.get("UIScene");
 
         this.score = 0;
-        this.playerHealth = 1;
+        this.playerHealth = 4;
 
         this.selectedTile;
 
@@ -143,8 +143,10 @@ class BaseScene extends Phaser.Scene {
 
     damagePlayer(){
         this.playerHealth -= 1;
+        this.UIScene.removeLife();
         if(this.playerHealth <= 0){
             console.log("You are now dead..");
+            this.UIScene.displayGameover();
         }
     }
 
@@ -220,6 +222,12 @@ class UIScene extends Phaser.Scene {
         this.defenceButton.setInteractive();
         this.defenceButton.on('pointerdown', this.defencePressed);
         this.scoreText = this.add.text(this.game.scale.width - 120, 10, 'Score: 0', {fontFamily: 'Impact, sans-serif', fontSize: '20px'});
+        this.lives = [
+            this.add.sprite(20, 20, 'life'), 
+            this.add.sprite(50, 20, 'life'), 
+            this.add.sprite(80, 20, 'life'), 
+            this.add.sprite(110, 20, 'life'), 
+        ];
     }
     defencePressed() {
         if (!this.scene.gameScene.selectedTile) {
@@ -248,7 +256,13 @@ class UIScene extends Phaser.Scene {
         this.scoreText.setText('Score: ' + newScore);
     }
     displayGameover(){
-        this.gameOverText = this.add.sprite(560, 576, 'gameOver');
+        this.gameOverText = this.add.sprite(560, 300, 'gameOver');
+    }
+    removeLife(){
+        if(this.lives.length > 0){
+            let lastLife = this.lives.pop();
+            lastLife.setTexture('lifeEmpty');
+        }
     }
     update() {
 
