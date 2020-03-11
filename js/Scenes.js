@@ -23,7 +23,7 @@ class BaseScene extends Phaser.Scene {
         // Enemy path points
         this.points = [
             251.00, 255.00,
-            256.99, 132.15,
+            350.00, 132.15,
             820.31, 149.13,
             833.29, 446.77,
             1298.73, 457.75
@@ -42,17 +42,21 @@ class BaseScene extends Phaser.Scene {
         //debug spawn enemy
         this.spawnEnemy();
 
-        this.scene.run('UIScene',{gameScene: this});
+        this.scene.run('UIScene', { gameScene: this });
         this.UIScene = this.scene.get("UIScene");
 
         this.score = 0;
+        this.playerHealth = 1;
 
         this.selectedTile;
 
         // events
         this.input.on('pointerdown', function (pointer) {
             let scene = this.scene;
-            if(!scene.selectedTile){
+            if (!scene.scale.isFullscreen) {
+                scene.scale.startFullscreen();
+            }
+            if (!scene.selectedTile) {
                 return;
             }
             let pointerX = pointer.worldX;
@@ -67,6 +71,7 @@ class BaseScene extends Phaser.Scene {
             }
 
         });
+
     }
 
     update(time) {
@@ -74,14 +79,14 @@ class BaseScene extends Phaser.Scene {
             let nearestEnemy = this.findNearestEnemy(defence);
             if (nearestEnemy) {
 
-                if(!defence.playingTween){
+                if (!defence.playingTween) {
                     defence.playingTween = true;
                     let targetAngle = Phaser.Math.Angle.Between(defence.x, defence.y, nearestEnemy.x, nearestEnemy.y);
                     let tweenConfig = {
                         targets: [defence],
-                        props: {rotation: targetAngle},
+                        props: { rotation: targetAngle },
                         duration: 500,
-                        onComplete: function(){
+                        onComplete: function () {
                             defence.lastEnemy = nearestEnemy;
                             defence.playingTween = false;
                             console.log("Tween end");
@@ -90,10 +95,10 @@ class BaseScene extends Phaser.Scene {
                     this.add.tween(tweenConfig);
                 }
 
-                if(defence.lastEnemy != nearestEnemy){
+                if (defence.lastEnemy != nearestEnemy) {
                     return;
                 }
-                if(defence.lastFire && (time - defence.lastFire) < 1000){
+                if (defence.lastFire && (time - defence.lastFire) < 1000) {
                     return;
                 }
                 defence.lastFire = time;
@@ -101,16 +106,16 @@ class BaseScene extends Phaser.Scene {
                 let bullet = this.bullets.get(defence.x, defence.y);
                 bullet.setRotation(defence.rotation);
                 this.physics.velocityFromRotation(defence.rotation, 600, bullet.body.velocity);
-                
+
             }
         };
     }
 
-    bulletHit(bullet, enemy){
+    bulletHit(bullet, enemy) {
         enemy.health -= 1;
         console.log(enemy.health);
         bullet.destroy();
-        if (enemy.health <= 0){
+        if (enemy.health <= 0) {
             enemy.destroy();
             this.score += 4;
             this.UIScene.updateScore(this.score);
@@ -123,11 +128,18 @@ class BaseScene extends Phaser.Scene {
                 (
                     defence.x, defence.y,
                     enemy.x, enemy.y
-                )
+                );
             if (distanceBetween <= 300) {
                 return enemy;
             }
         };
+    }
+
+    damagePlayer(){
+        this.playerHealth -= 1;
+        if(this.playerHealth <= 0){
+            console.log("You are now dead..");
+        }
     }
 
     spawnEnemy() {
@@ -143,13 +155,14 @@ class BaseScene extends Phaser.Scene {
 
         newEnemy.startFollow({
             positionOnPath: true,
-            duration: 20000,
+            duration: 10000,//20000,
             yoyo: false,
             repeat: 0,
             rotateToPath: true,
             verticalAdjust: true,
             onComplete: function () {
                 newEnemy.destroy();
+                this.parent.scene.damagePlayer(1);
             }
         });
 
@@ -181,7 +194,7 @@ class UIScene extends Phaser.Scene {
     constructor(key) {
         super('UIScene');
     }
-    init(data){
+    init(data) {
         this.gameScene = data.gameScene;
     }
     preload() {
@@ -199,31 +212,31 @@ class UIScene extends Phaser.Scene {
         this.defenceButton.on('pointerdown', this.defencePressed);
         this.scoreText = this.add.text(this.game.scale.width - 100, 10, 'Score: 0');
     }
-    defencePressed(){
-        if(!this.scene.gameScene.selectedTile){
+    defencePressed() {
+        if (!this.scene.gameScene.selectedTile) {
             this.scene.gameScene.selectedTile = 249;
         }
-        else{
+        else {
             this.scene.gameScene.selectedTile = null;
         }
         this.scene.toggleButton(this);
     }
-    toggleButton(button){
-        if (button.toggledOn){
+    toggleButton(button) {
+        if (button.toggledOn) {
             this.toggledButton = null;
             button.setTexture('button');
         }
-        else{
+        else {
             this.toggledButton = button;
             button.setTexture('buttonPressed');
         }
         button.toggledOn = !button.toggledOn;
     }
-    unToggleButtons(){
+    unToggleButtons() {
         this.toggleButton(this.toggledButton);
     }
-    updateScore(newScore){
-        this.scoreText.setText('Score: '+newScore);
+    updateScore(newScore) {
+        this.scoreText.setText('Score: ' + newScore);
     }
     update() {
 
