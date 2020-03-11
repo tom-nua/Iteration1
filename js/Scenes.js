@@ -95,7 +95,7 @@ class BaseScene extends Phaser.Scene {
                         onComplete: function () {
                             defence.lastEnemy = nearestEnemy;
                             defence.playingTween = false;
-                            console.log("Tween end");
+                            // console.log("Tween end");
                         }
                     };
                     this.add.tween(tweenConfig);
@@ -108,7 +108,7 @@ class BaseScene extends Phaser.Scene {
                     return;
                 }
                 defence.lastFire = time;
-                console.log("fire!");
+                // console.log("fire!");
                 let bullet = this.bullets.get(defence.x, defence.y);
                 bullet.setRotation(defence.rotation);
                 this.physics.velocityFromRotation(defence.rotation, 700, bullet.body.velocity);
@@ -123,9 +123,11 @@ class BaseScene extends Phaser.Scene {
 
     bulletHit(bullet, enemy) {
         enemy.health -= 1;
-        console.log(enemy.health);
+        // console.log(enemy.health);
         bullet.destroy();
         if (enemy.health <= 0) {
+            enemy.removeAllListeners();
+            enemy.stopFollow();
             enemy.destroy();
             this.score += 4;
             this.UIScene.updateScore(this.score);
@@ -149,7 +151,7 @@ class BaseScene extends Phaser.Scene {
         this.playerHealth -= 1;
         this.UIScene.removeLife();
         if(this.playerHealth <= 0){
-            console.log("You are now dead..");
+            // console.log("You are now dead..");
             this.UIScene.displayGameover();
             this.tweens.killAll();
             this.input.removeAllListeners();
@@ -264,6 +266,7 @@ class UIScene extends Phaser.Scene {
     }
     displayGameover(){
         this.gameOverText = this.add.sprite(560, 300, 'gameOver');
+        this.defenceButton.removeAllListeners();
     }
     removeLife(){
         if(this.lives.length > 0){
