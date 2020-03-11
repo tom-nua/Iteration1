@@ -47,6 +47,7 @@ class BaseScene extends Phaser.Scene {
 
         this.score = 0;
         this.playerHealth = 4;
+        this.gameOver = false;
 
         this.selectedTile;
 
@@ -77,6 +78,9 @@ class BaseScene extends Phaser.Scene {
     }
 
     update(time) {
+        if(this.gameOver){
+            return;
+        }
         for (const defence of this.defences.getChildren()) {
             let nearestEnemy = this.findNearestEnemy(defence);
             if (nearestEnemy) {
@@ -147,6 +151,9 @@ class BaseScene extends Phaser.Scene {
         if(this.playerHealth <= 0){
             console.log("You are now dead..");
             this.UIScene.displayGameover();
+            this.tweens.killAll();
+            this.input.removeAllListeners();
+            this.gameOver = true;
         }
     }
 
