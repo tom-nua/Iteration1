@@ -61,7 +61,7 @@ class BaseScene extends Phaser.Scene {
             if (existingTile) {
                 scene.placeTileLayer.putTileAt(181, existingTile.x, existingTile.y);
                 let tileWorldPos = scene.placeTileLayer.tileToWorldXY(existingTile.x, existingTile.y);
-                let newDefence = scene.defences.create(tileWorldPos.x + 32, tileWorldPos.y + 25, 'tilesheet', scene.selectedTile);
+                scene.defences.create(tileWorldPos.x + 32, tileWorldPos.y + 25, 'tilesheet', scene.selectedTile);
                 scene.selectedTile = null;
                 scene.UIScene.unToggleButtons();
             }
@@ -71,19 +71,36 @@ class BaseScene extends Phaser.Scene {
 
     update(time) {
         for (const defence of this.defences.getChildren()) {
-            if(defence.lastFire && (time - defence.lastFire) < 1000){
-                return;
-            }
-            defence.lastFire = time;
             let nearestEnemy = this.findNearestEnemy(defence);
             if (nearestEnemy) {
-                let targetAngle = Phaser.Math.Angle.Between(defence.x, defence.y, nearestEnemy.x, nearestEnemy.y);
-                defence.setRotation(targetAngle);
 
+                if(!defence.playingTween){
+                    defence.playingTween = true;
+                    let targetAngle = Phaser.Math.Angle.Between(defence.x, defence.y, nearestEnemy.x, nearestEnemy.y);
+                    let tweenConfig = {
+                        targets: [defence],
+                        props: {rotation: targetAngle},
+                        duration: 500,
+                        onComplete: function(){
+                            defence.lastEnemy = nearestEnemy;
+                            defence.playingTween = false;
+                            console.log("Tween end");
+                        }
+                    };
+                    this.add.tween(tweenConfig);
+                }
+
+                if(defence.lastEnemy != nearestEnemy){
+                    return;
+                }
+                if(defence.lastFire && (time - defence.lastFire) < 1000){
+                    return;
+                }
+                defence.lastFire = time;
                 console.log("fire!");
                 let bullet = this.bullets.get(defence.x, defence.y);
-                bullet.setRotation(targetAngle);
-                this.physics.velocityFromRotation(targetAngle, 400, bullet.body.velocity);
+                bullet.setRotation(defence.rotation);
+                this.physics.velocityFromRotation(defence.rotation, 600, bullet.body.velocity);
                 
             }
         };
