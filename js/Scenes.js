@@ -40,7 +40,7 @@ class BaseScene extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.enemies, this.bulletHit, null, this);
 
         //debug spawn enemy
-        this.spawnEnemy();
+        // this.spawnEnemy();
 
         this.scene.run('UIScene', { gameScene: this });
         this.UIScene = this.scene.get("UIScene");
@@ -49,6 +49,8 @@ class BaseScene extends Phaser.Scene {
         this.playerHealth = 1;
 
         this.selectedTile;
+
+        this.newEnemyTime;
 
         // events
         this.input.on('pointerdown', function (pointer) {
@@ -105,10 +107,14 @@ class BaseScene extends Phaser.Scene {
                 console.log("fire!");
                 let bullet = this.bullets.get(defence.x, defence.y);
                 bullet.setRotation(defence.rotation);
-                this.physics.velocityFromRotation(defence.rotation, 600, bullet.body.velocity);
+                this.physics.velocityFromRotation(defence.rotation, 700, bullet.body.velocity);
 
             }
         };
+        if(!this.newEnemyTime || time >= this.newEnemyTime){
+            this.spawnEnemy();
+            this.newEnemyTime = time + Phaser.Math.RND.between(2000, 7000);
+        }
     }
 
     bulletHit(bullet, enemy) {
@@ -155,7 +161,7 @@ class BaseScene extends Phaser.Scene {
 
         newEnemy.startFollow({
             positionOnPath: true,
-            duration: 10000,//20000,
+            duration: 20000,
             yoyo: false,
             repeat: 0,
             rotateToPath: true,
@@ -201,6 +207,9 @@ class UIScene extends Phaser.Scene {
         this.load.image('placementMenuBackground', 'assets/longMenu.png');
         this.load.image('button', 'assets/button.png');
         this.load.image('buttonPressed', 'assets/buttonPressed.png');
+        this.load.image('gameOver', 'assets/gameover.png');
+        this.load.image('life', 'assets/life.png');
+        this.load.image('lifeEmpty', 'assets/lifeEmpty.png');
     }
     create() {
         this.menuBackground = this.add.sprite(564, 576, 'placementMenuBackground');
@@ -210,7 +219,7 @@ class UIScene extends Phaser.Scene {
         this.defenceButton = this.add.sprite(560, 576, 'button');
         this.defenceButton.setInteractive();
         this.defenceButton.on('pointerdown', this.defencePressed);
-        this.scoreText = this.add.text(this.game.scale.width - 100, 10, 'Score: 0');
+        this.scoreText = this.add.text(this.game.scale.width - 120, 10, 'Score: 0', {fontFamily: 'Impact, sans-serif', fontSize: '20px'});
     }
     defencePressed() {
         if (!this.scene.gameScene.selectedTile) {
@@ -237,6 +246,9 @@ class UIScene extends Phaser.Scene {
     }
     updateScore(newScore) {
         this.scoreText.setText('Score: ' + newScore);
+    }
+    displayGameover(){
+        this.gameOverText = this.add.sprite(560, 576, 'gameOver');
     }
     update() {
 
