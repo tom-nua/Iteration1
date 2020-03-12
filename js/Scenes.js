@@ -68,52 +68,50 @@ class BaseScene extends Phaser.Scene {
             if (existingTile) {
                 scene.placeTileLayer.putTileAt(181, existingTile.x, existingTile.y);
                 let tileWorldPos = scene.placeTileLayer.tileToWorldXY(existingTile.x, existingTile.y);
-                scene.defences.create(tileWorldPos.x + 32, tileWorldPos.y + 25, 'tilesheet', scene.selectedTile);
+                let newSprite = scene.defences.create(tileWorldPos.x + 32, tileWorldPos.y + 25, 'tilesheet', scene.selectedTile);
+                newSprite.spriteCount = scene.defences.getLength();
                 scene.selectedTile = null;
                 scene.UIScene.unToggleButtons();
             }
 
         });
 
+        
     }
 
     update(time) {
         if(this.gameOver){
             return;
         }
-        for (const defence of this.defences.getChildren()) {
+        for (let defence of this.defences.getChildren()) {
             let nearestEnemy = this.findNearestEnemy(defence);
             if (nearestEnemy) {
-
-                if (!defence.playingTween) {
-                    defence.playingTween = true;
+                if (!this.tweens.isTweening(defence)) {
                     let targetAngle = Phaser.Math.Angle.Between(defence.x, defence.y, nearestEnemy.x, nearestEnemy.y);
                     let tweenConfig = {
-                        targets: [defence],
+                        targets: defence,
                         props: { rotation: targetAngle },
                         duration: 500,
-                        onComplete: function () {
-                            defence.lastEnemy = nearestEnemy;
-                            defence.playingTween = false;
-                            // console.log("Tween end");
-                        }
+                        onComplete: function (tween, targets, staticDefence) {
+                            staticDefence.lastEnemy = nearestEnemy;
+                        },
+                        onCompleteParams: [ defence ]
                     };
                     this.add.tween(tweenConfig);
                 }
 
                 if (defence.lastEnemy != nearestEnemy) {
-                    return;
+                    continue;
                 }
-                if (defence.lastFire && (time - defence.lastFire) < 1000) {
-                    return;
+                if (defence.lastFire && time < (defence.lastFire + 2000)) {
+                    continue;
                 }
                 defence.lastFire = time;
-                // console.log("fire!");
                 let bullet = this.bullets.get(defence.x, defence.y);
                 bullet.setRotation(defence.rotation);
                 this.physics.velocityFromRotation(defence.rotation, 700, bullet.body.velocity);
 
-            }
+             }
         };
         if(!this.newEnemyTime || time >= this.newEnemyTime){
             this.spawnEnemy();
@@ -123,7 +121,6 @@ class BaseScene extends Phaser.Scene {
 
     bulletHit(bullet, enemy) {
         enemy.health -= 1;
-        // console.log(enemy.health);
         bullet.destroy();
         if (enemy.health <= 0) {
             enemy.removeAllListeners();
@@ -135,7 +132,10 @@ class BaseScene extends Phaser.Scene {
     }
 
     findNearestEnemy(defence) {
-        for (const enemy of this.enemies.getChildren()) {
+        for (let enemy of this.enemies.getChildren()) {
+            if(!enemy.scene){
+                continue;
+            }
             let distanceBetween = Phaser.Math.Distance.Between
                 (
                     defence.x, defence.y,
