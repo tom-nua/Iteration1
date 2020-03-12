@@ -6,17 +6,19 @@ class BaseScene extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet('tilesheet', 'assets/tilesheet.png', {
-            frameWidth: 64, frameHeight: 64, margin: 1, spacing: 2
+            frameWidth: 64,
+            frameHeight: 64,
+            margin: 1,
+            spacing: 2
         });
     }
     create() {
-        //variables
-        let camera = this.cameras.main
         //tiles
         let tilesheet = this.tilemap.addTilesetImage('tilesheet');
         this.tilemap.createStaticLayer('background', tilesheet);
         this.placeTileLayer = this.tilemap.createDynamicLayer('placeTiles', tilesheet);
 
+        //variables
         // enemy spawn location
         this.spawnX = -18.00;
         this.spawnY = 258.00;
@@ -42,7 +44,9 @@ class BaseScene extends Phaser.Scene {
         //debug spawn enemy
         // this.spawnEnemy();
 
-        this.scene.run('UIScene', { gameScene: this });
+        this.scene.run('UIScene', {
+            gameScene: this
+        });
         this.UIScene = this.scene.get("UIScene");
 
         this.score = 0;
@@ -63,7 +67,7 @@ class BaseScene extends Phaser.Scene {
                 return;
             }
             let pointerX = pointer.worldX;
-            let pointerY = pointer.worldY
+            let pointerY = pointer.worldY;
             let existingTile = scene.placeTileLayer.getTileAtWorldXY(pointerX, pointerY);
             if (existingTile) {
                 scene.placeTileLayer.putTileAt(181, existingTile.x, existingTile.y);
@@ -76,11 +80,11 @@ class BaseScene extends Phaser.Scene {
 
         });
 
-        
+
     }
 
     update(time) {
-        if(this.gameOver){
+        if (this.gameOver) {
             return;
         }
         for (let defence of this.defences.getChildren()) {
@@ -90,12 +94,14 @@ class BaseScene extends Phaser.Scene {
                     let targetAngle = Phaser.Math.Angle.Between(defence.x, defence.y, nearestEnemy.x, nearestEnemy.y);
                     let tweenConfig = {
                         targets: defence,
-                        props: { rotation: targetAngle },
+                        props: {
+                            rotation: targetAngle
+                        },
                         duration: 500,
                         onComplete: function (tween, targets, staticDefence) {
                             staticDefence.lastEnemy = nearestEnemy;
                         },
-                        onCompleteParams: [ defence ]
+                        onCompleteParams: [defence]
                     };
                     this.add.tween(tweenConfig);
                 }
@@ -111,9 +117,9 @@ class BaseScene extends Phaser.Scene {
                 bullet.setRotation(defence.rotation);
                 this.physics.velocityFromRotation(defence.rotation, 700, bullet.body.velocity);
 
-             }
+            }
         };
-        if(!this.newEnemyTime || time >= this.newEnemyTime){
+        if (!this.newEnemyTime || time >= this.newEnemyTime) {
             this.spawnEnemy();
             this.newEnemyTime = time + Phaser.Math.RND.between(2000, 7000);
         }
@@ -133,25 +139,23 @@ class BaseScene extends Phaser.Scene {
 
     findNearestEnemy(defence) {
         for (let enemy of this.enemies.getChildren()) {
-            if(!enemy.scene){
+            if (!enemy.scene) {
                 continue;
             }
-            let distanceBetween = Phaser.Math.Distance.Between
-                (
-                    defence.x, defence.y,
-                    enemy.x, enemy.y
-                );
+            let distanceBetween = Phaser.Math.Distance.Between(
+                defence.x, defence.y,
+                enemy.x, enemy.y
+            );
             if (distanceBetween <= 300) {
                 return enemy;
             }
         };
     }
 
-    damagePlayer(){
+    damagePlayer() {
         this.playerHealth -= 1;
         this.UIScene.removeLife();
-        if(this.playerHealth <= 0){
-            // console.log("You are now dead..");
+        if (this.playerHealth <= 0) {
             this.UIScene.displayGameover();
             this.tweens.killAll();
             this.input.removeAllListeners();
@@ -199,7 +203,9 @@ class Level1 extends BaseScene {
         super.preload();
     }
     create() {
-        this.tilemap = this.make.tilemap({ key: 'level1Map' });
+        this.tilemap = this.make.tilemap({
+            key: 'level1Map'
+        });
         super.create();
     }
     update(time, delta) {
@@ -230,19 +236,21 @@ class UIScene extends Phaser.Scene {
         this.defenceButton = this.add.sprite(560, 576, 'button');
         this.defenceButton.setInteractive();
         this.defenceButton.on('pointerdown', this.defencePressed);
-        this.scoreText = this.add.text(this.game.scale.width - 120, 10, 'Score: 0', {fontFamily: 'Impact, sans-serif', fontSize: '20px'});
+        this.scoreText = this.add.text(this.game.scale.width - 120, 10, 'Score: 0', {
+            fontFamily: 'Impact, sans-serif',
+            fontSize: '20px'
+        });
         this.lives = [
-            this.add.sprite(20, 20, 'life'), 
-            this.add.sprite(50, 20, 'life'), 
-            this.add.sprite(80, 20, 'life'), 
-            this.add.sprite(110, 20, 'life'), 
+            this.add.sprite(20, 20, 'life'),
+            this.add.sprite(50, 20, 'life'),
+            this.add.sprite(80, 20, 'life'),
+            this.add.sprite(110, 20, 'life'),
         ];
     }
     defencePressed() {
         if (!this.scene.gameScene.selectedTile) {
             this.scene.gameScene.selectedTile = 249;
-        }
-        else {
+        } else {
             this.scene.gameScene.selectedTile = null;
         }
         this.scene.toggleButton(this);
@@ -251,8 +259,7 @@ class UIScene extends Phaser.Scene {
         if (button.toggledOn) {
             this.toggledButton = null;
             button.setTexture('button');
-        }
-        else {
+        } else {
             this.toggledButton = button;
             button.setTexture('buttonPressed');
         }
@@ -264,12 +271,12 @@ class UIScene extends Phaser.Scene {
     updateScore(newScore) {
         this.scoreText.setText('Score: ' + newScore);
     }
-    displayGameover(){
+    displayGameover() {
         this.gameOverText = this.add.sprite(560, 300, 'gameOver');
         this.defenceButton.removeAllListeners();
     }
-    removeLife(){
-        if(this.lives.length > 0){
+    removeLife() {
+        if (this.lives.length > 0) {
             let lastLife = this.lives.pop();
             lastLife.setTexture('lifeEmpty');
         }
